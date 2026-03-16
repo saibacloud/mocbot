@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mocha</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #111;
+      color: #ccc;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 20px;
+    }
+
+    pre {
+      color: #c8853a;
+      font-size: 16px;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    #log {
+      width: 100%;
+      max-width: 560px;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .msg-you {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .msg-mocha {
+      color: #ccc;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .msg-you::before {
+      content: 'you: ';
+      color: #555;
+    }
+
+    .msg-mocha::before {
+      content: 'mocha: ';
+      color: #c8853a;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #ccc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #555;
+    }
+
+    button {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #c8853a;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #c8853a;
+    }
+
+    @keyframes breathe {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    #cat {
+      animation: breathe 3s ease-in-out infinite;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<pre id="cat">
+   ／l、
+ （ﾟ､ ｡７
+  |、ﾞ~ヽ
+  じしf_,)ノ 
+</pre>
+
+<script>
+  const frames = [
+    `   ／l、
+ （ﾟ､ ｡７
+  |、ﾞ~ヽ
+  じしf_,)ノ `,
+
+    `   ／l、
+ （ﾟ､ ｡７
+  |、ﾞ~ヽ
+  じしf_,)ノ `,
+  ];
+
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % frames.length;
+    document.getElementById('cat').textContent = frames[i];
+  }, 1800);
+</script>
+
+<div id="log">
+  <div class="msg-mocha">...you're looking at me.. what do you want..</div>
+</div>
+
+<form onsubmit="send(event)">
+  <input id="input" type="text" placeholder="say something..." autocomplete="off">
+  <button type="submit">send</button>
+</form>
+
+<script>
+  const log = document.getElementById('log');
+  const input = document.getElementById('input');
+  let history = [];
+
+  async function send(e) {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg-you';
+    userMsg.textContent = text;
+    log.appendChild(userMsg);
+
+    history.push({ role: 'user', content: text });
+
+    const mochaMsg = document.createElement('div');
+    mochaMsg.className = 'msg-mocha';
+    mochaMsg.textContent = '...';
+    log.appendChild(mochaMsg);
+    log.scrollTop = log.scrollHeight;
+
+    try {
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: history.slice(-10) })
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let reply = '';
+      let started = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.chunk) {
+              if (!started) { mochaMsg.textContent = ''; started = true; }
+              reply += data.chunk;
+              mochaMsg.textContent = reply;
+              log.scrollTop = log.scrollHeight;
+            }
+            if (data.done) {
+              history.push({ role: 'assistant', content: reply });
+            }
+          } catch { }
+        }
+      }
+    } catch {
+      mochaMsg.textContent = '...something broke.';
+    }
+  }
+
+</script>
+
+</body>
+
+</html>
