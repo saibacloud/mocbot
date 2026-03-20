@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "==> Setting up Mocha Cat Terminal..."
-
 INSTALL_DIR=/opt/mocha
 SERVICE_USER=${USER:-ubuntu}
 
@@ -14,7 +12,7 @@ python3 -m venv venv
 ./venv/bin/pip install --quiet -r requirements.txt
 
 echo ""
-curl -s http://SOMETHING | python3 -c "
+curl -s http://acomputerprobably:69 | python3 -c "
 import json,sys
 data=json.load(sys.stdin)
 for m in data.get('models',[]):
