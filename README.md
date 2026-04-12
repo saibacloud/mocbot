@@ -12,5 +12,5 @@ Then the magic source which is my handsomest boie mocmoc, his personality is the
  ／l、
 （ﾟ､ ｡７
  |、ﾞ~ヽ
-  じしf_,)
+ じしf_,)
 ```
