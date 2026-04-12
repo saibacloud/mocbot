@@ -19,6 +19,8 @@ for m in data.get('models',[]):
     print(' -', m['name'])
 "
 
+# IT IS TIME FOR THE RUN THE MEGAVOID MOCHN' DOOM
+
 sudo cp mocha.service /etc/systemd/system/
 sudo sed -i "s/User=ubuntu/User=$SERVICE_USER/" /etc/systemd/system/mocha.service
 sudo systemctl daemon-reload
