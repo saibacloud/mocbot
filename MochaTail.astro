@@ -1,0 +1,66 @@
+
+---
+// Adding in the .astro for Mocha ASCII & the tail animation
+---
+---
+
+<div class="cat-container">
+  <pre class="cat"> ／l、
+（ﾟ､ ｡７
+ |、ﾞ~ヽ
+  じしf_,)</pre>
+  <svg class="tail" viewBox="-30 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <path id="tail-path" d="M 0 64 Q 10 32 5 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<style>
+  .cat-container {
+    position: relative;
+    display: inline-block;
+    font-family: var(--mono, monospace);
+    color: var(--text-dim, #888);
+  }
+
+  .cat {
+    margin: 0;
+    line-height: 1.6;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .tail {
+    position: absolute;
+    bottom: 2px;
+    right: -28px;
+    width: 52px;
+    height: 72px;
+    overflow: visible;
+    opacity: 0.85;
+  }
+</style>
+
+<script>
+    const path = document.getElementById('tail-path');
+    if (path) {
+    let start: number | null = null;
+    function animate(ts: number) {
+        if (!start) start = ts;
+        const t = (ts - start) / 1000;
+
+        const swing = Math.sin(t * 1.1) * 11 + Math.sin(t * 2.3) * 4;
+
+        const cp1x = 0  + swing * 1.2;   
+        const cp1y = 52;
+        const cp2x = 18 - swing * 1.4;   
+        const cp2y = 16;
+        const ex   = 8  + swing * 0.2;   
+        const ey   = 0;
+
+        path.setAttribute('d', `M 0 64 C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${ex} ${ey}`);
+        requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+    }
+</script>
