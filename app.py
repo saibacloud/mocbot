@@ -1,4 +1,3 @@
-import inspect
 import json
 import os
 from contextlib import asynccontextmanager
@@ -185,10 +184,7 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
     async def stream_response():
         full_reply = ""
         async with httpx.AsyncClient(timeout=180.0) as client:
-            stream_ctx = client.stream("POST", f"{OLLAMA_HOST}/api/chat", json=payload)
-            if inspect.isawaitable(stream_ctx):
-                stream_ctx = await stream_ctx
-            async with stream_ctx as response:
+            async with client.stream("POST", f"{OLLAMA_HOST}/api/chat", json=payload) as response:
                 async for line in response.aiter_lines():
                     if not line:
                         continue

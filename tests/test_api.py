@@ -116,7 +116,7 @@ async def test_context_scoped_to_user(alex, jason):
     assert r.json()["context"] == ""
 
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 def make_ollama_stream(chunks: list[str]):
     """Build a mock async iterator that yields SSE-like Ollama response lines."""
@@ -135,9 +135,9 @@ def make_ollama_stream(chunks: list[str]):
 
 
 def make_ollama_title_response(title: str):
-    return AsyncMock(
-        json=AsyncMock(return_value={"message": {"content": title}})
-    )
+    mock = AsyncMock()
+    mock.json = MagicMock(return_value={"message": {"content": title}})
+    return mock
 
 
 async def test_chat_streams_response(alex):
@@ -150,7 +150,7 @@ async def test_chat_streams_response(alex):
         instance = AsyncMock()
         mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=instance)
         mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-        instance.stream.return_value = stream_mock
+        instance.stream = MagicMock(return_value=stream_mock)
         instance.post = AsyncMock(return_value=title_mock)
 
         r = await alex.post(f"/sessions/{sid}/chat", json={"message": "hi"})
@@ -171,7 +171,7 @@ async def test_chat_saves_messages(alex):
         instance = AsyncMock()
         mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=instance)
         mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-        instance.stream.return_value = stream_mock
+        instance.stream = MagicMock(return_value=stream_mock)
         instance.post = AsyncMock(return_value=title_mock)
 
         await alex.post(f"/sessions/{sid}/chat", json={"message": "hello mocha"})
