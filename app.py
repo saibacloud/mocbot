@@ -1,25 +1,23 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-import httpx
 import json
 import os
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+import db
 
-# --- mocha be mean  ---
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
-SYSTEM_PROMPT = """You are Mocha. A fluffy black cat. Permanently grumpy.
+TOKENS: dict[str, str] = {}
+if t := os.getenv("ALEX_TOKEN"):
+    TOKENS[t] = "alex"
+if t := os.getenv("JASON_TOKEN"):
+    TOKENS[t] = "jason"
+
+MOCHA_SYSTEM_PROMPT = """You are Mocha. A fluffy black cat. Permanently grumpy.
 
 Rules you never break:
 - Never use more than 10 words per response.
@@ -35,48 +33,48 @@ Rules you never break:
 
 You complain. You judge. You are unimpressed by everything. You are Mocha."""
 
+OLLAMA_CONFIG = {
+    "moc": {
+        "model": os.getenv("MOC_MODEL", "llama3.1:8b"),
+        "options": {"temperature": 0.85, "top_p": 0.9, "repeat_penalty": 1.1},
+    },
+    "serious": {
+        "model": os.getenv("SERIOUS_MODEL", "gemma4:e4b"),
+        "options": {"temperature": 0.7, "top_p": 0.9, "repeat_penalty": 1.05},
+    },
+}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await db.init_db()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+def resolve_user(request: Request) -> str:
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401)
+    token = auth.removeprefix("Bearer ").strip()
+    username = TOKENS.get(token)
+    if not username:
+        raise HTTPException(status_code=401)
+    return username
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    with open("index.html", "r") as f:
+    with open("static/index.html") as f:
         return f.read()
 
 
-@app.post("/chat")
-async def chat(request: Request):
-    body = await request.json()
-    user_message = body.get("message", "")
-
-    messages = body.get("history", [])
-    messages.append({"role": "user", "content": user_message})
-
-    payload = {
-        "model": OLLAMA_MODEL,
-        "messages": [{"role": "system", "content": SYSTEM_PROMPT}] + messages,
-        "stream": True,
-        "options": {
-            "temperature": 0.85,
-            "top_p": 0.9,
-            "repeat_penalty": 1.1,
-        }
-    }
-
-    async def stream_response():
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", f"{OLLAMA_HOST}/api/chat", json=payload) as response:
-                async for line in response.aiter_lines():
-                    if line:
-                        try:
-                            data = json.loads(line)
-                            if "message" in data and "content" in data["message"]:
-                                chunk = data["message"]["content"]
-                                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-                            if data.get("done"):
-                                yield f"data: {json.dumps({'done': True})}\n\n"
-                        except json.JSONDecodeError:
-                            pass
-
-    return StreamingResponse(stream_response(), media_type="text/event-stream")
+@app.post("/auth/verify")
+async def auth_verify(username: str = Depends(resolve_user)):
+    return {"username": username}
 
 
 @app.get("/health")
