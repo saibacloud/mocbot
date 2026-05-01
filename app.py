@@ -85,3 +85,42 @@ async def health():
             return {"status": "ok", "ollama": r.status_code == 200}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+
+@app.get("/sessions")
+async def list_sessions(username: str = Depends(resolve_user)):
+    return await db.list_sessions(username)
+
+
+@app.post("/sessions", status_code=201)
+async def create_session(request: Request, username: str = Depends(resolve_user)):
+    body = await request.json()
+    mode = body.get("mode", "moc")
+    if mode not in ("moc", "serious"):
+        raise HTTPException(status_code=400, detail="mode must be 'moc' or 'serious'")
+    return await db.create_session(username, mode)
+
+
+@app.delete("/sessions/{session_id}", status_code=204)
+async def delete_session(session_id: str, username: str = Depends(resolve_user)):
+    if not await db.delete_session(session_id, username):
+        raise HTTPException(status_code=404)
+
+
+@app.get("/sessions/{session_id}/messages")
+async def get_messages(session_id: str, username: str = Depends(resolve_user)):
+    if not await db.get_session(session_id, username):
+        raise HTTPException(status_code=404)
+    return await db.get_messages(session_id)
+
+
+@app.get("/context")
+async def get_context(username: str = Depends(resolve_user)):
+    return {"context": await db.get_context(username)}
+
+
+@app.put("/context")
+async def set_context(request: Request, username: str = Depends(resolve_user)):
+    body = await request.json()
+    await db.set_context(username, body.get("context", ""))
+    return {"ok": True}
