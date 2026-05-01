@@ -33,6 +33,7 @@ async def test_verify_valid_token(client):
 
 async def test_verify_jason_token(client):
     r = await client.post("/auth/verify", headers={"Authorization": "Bearer test-jason-token"})
+    assert r.status_code == 200
     assert r.json()["username"] == "jason"
 
 async def test_verify_invalid_token(client):
