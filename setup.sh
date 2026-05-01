@@ -11,18 +11,14 @@ cd $INSTALL_DIR
 python3 -m venv venv
 ./venv/bin/pip install --quiet -r requirements.txt
 
+echo "Dependencies installed."
 echo ""
-curl -s http://acomputerprobably:69 | python3 -c "
-import json,sys
-data=json.load(sys.stdin)
-for m in data.get('models',[]):
-    print(' -', m['name'])
-"
-
-# IT IS TIME FOR THE RUN THE MEGAVOID MOCHN' DOOM
+echo "IMPORTANT: Edit /etc/systemd/system/mocha.service and set ALEX_TOKEN and JASON_TOKEN before starting."
+echo ""
 
 sudo cp mocha.service /etc/systemd/system/
 sudo sed -i "s/User=ubuntu/User=$SERVICE_USER/" /etc/systemd/system/mocha.service
 sudo systemctl daemon-reload
 sudo systemctl enable mocha
-sudo systemctl restart mocha
+
+echo "Service enabled. Run: sudo systemctl restart mocha"

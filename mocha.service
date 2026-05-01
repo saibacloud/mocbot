@@ -7,7 +7,11 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/opt/mocha
 Environment=OLLAMA_HOST=http://localhost:11434
-Environment=OLLAMA_MODEL=qwen3.5:9b
+Environment=MOC_MODEL=llama3.1:8b
+Environment=SERIOUS_MODEL=gemma4:e4b
+Environment=ALEX_TOKEN=CHANGE_ME
+Environment=JASON_TOKEN=CHANGE_ME
+Environment=MOCHA_DB=/opt/mocha/mocha.db
 ExecStart=/opt/mocha/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8400
 Restart=on-failure
 RestartSec=5
