@@ -1,3 +1,4 @@
+import json
 import pytest
 import db
 from httpx import AsyncClient, ASGITransport
@@ -113,3 +114,83 @@ async def test_context_scoped_to_user(alex, jason):
     await alex.put("/context", json={"context": "alex context"})
     r = await jason.get("/context")
     assert r.json()["context"] == ""
+
+
+from unittest.mock import AsyncMock, patch
+
+def make_ollama_stream(chunks: list[str]):
+    """Build a mock async iterator that yields SSE-like Ollama response lines."""
+    lines = [json.dumps({"message": {"content": c}}) for c in chunks]
+    lines.append(json.dumps({"done": True}))
+
+    async def aiter_lines():
+        for line in lines:
+            yield line
+
+    mock_response = AsyncMock()
+    mock_response.aiter_lines = aiter_lines
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=False)
+    return mock_response
+
+
+def make_ollama_title_response(title: str):
+    return AsyncMock(
+        json=AsyncMock(return_value={"message": {"content": title}})
+    )
+
+
+async def test_chat_streams_response(alex):
+    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+
+    stream_mock = make_ollama_stream(["hello", " there"])
+    title_mock = make_ollama_title_response("Hello There Chat")
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        instance = AsyncMock()
+        mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=instance)
+        mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        instance.stream.return_value = stream_mock
+        instance.post = AsyncMock(return_value=title_mock)
+
+        r = await alex.post(f"/sessions/{sid}/chat", json={"message": "hi"})
+
+    assert r.status_code == 200
+    body = r.text
+    assert "hello" in body
+    assert '"done": true' in body
+
+
+async def test_chat_saves_messages(alex):
+    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+
+    stream_mock = make_ollama_stream(["meow"])
+    title_mock = make_ollama_title_response("Meow Chat")
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        instance = AsyncMock()
+        mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=instance)
+        mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        instance.stream.return_value = stream_mock
+        instance.post = AsyncMock(return_value=title_mock)
+
+        await alex.post(f"/sessions/{sid}/chat", json={"message": "hello mocha"})
+
+    msgs = (await alex.get(f"/sessions/{sid}/messages")).json()
+    assert len(msgs) == 2
+    assert msgs[0]["role"] == "user"
+    assert msgs[0]["content"] == "hello mocha"
+    assert msgs[1]["role"] == "assistant"
+    assert msgs[1]["content"] == "meow"
+
+
+async def test_chat_wrong_session_returns_404(alex, jason):
+    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    r = await jason.post(f"/sessions/{sid}/chat", json={"message": "hi"})
+    assert r.status_code == 404
+
+
+async def test_chat_empty_message_returns_400(alex):
+    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    r = await alex.post(f"/sessions/{sid}/chat", json={"message": "   "})
+    assert r.status_code == 400
