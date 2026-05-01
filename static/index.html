@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mocha</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div id="login-screen">
+  <pre class="cat-art">   ／l、
+ （ﾟ､ ｡７
+  |、ﾞ~ヽ
+  じしf_,)ノ </pre>
+  <form id="login-form">
+    <input id="token-input" type="password" placeholder="token..." autocomplete="off">
+    <button type="submit">enter</button>
+  </form>
+  <div id="login-error"></div>
+</div>
+
+<div id="app-screen">
+  <div id="sidebar">
+    <button id="mocmode-toggle" class="active">MocMode</button>
+    <button id="new-chat-btn">+ new chat</button>
+    <div id="session-list"></div>
+    <div id="sidebar-footer">
+      <span id="username-label"></span>
+      <button id="context-btn">context</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="chat-main"></div>
+    <form id="chat-form">
+      <input id="chat-input" type="text" placeholder="say something..." autocomplete="off">
+      <button type="submit">send</button>
+    </form>
+  </div>
+</div>
+
+<div id="context-overlay">
+  <div id="context-editor">
+    <div id="context-header">
+      <span>your context — injected in SeriousMochaMode only</span>
+      <button id="context-close">×</button>
+    </div>
+    <textarea id="context-textarea" placeholder="Describe your role, current projects, preferred response style..."></textarea>
+    <button id="context-save">save</button>
+  </div>
+</div>
+
+<script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
