@@ -86,7 +86,8 @@ async def delete_session(session_id: str, username: str) -> bool:
             (session_id, username),
         )
         await db.commit()
-    return cursor.rowcount > 0
+        rowcount = cursor.rowcount
+    return rowcount > 0
 
 
 async def add_message(session_id: str, role: str, content: str):
@@ -126,11 +127,11 @@ async def message_count(session_id: str) -> int:
     return row[0]
 
 
-async def set_session_title(session_id: str, title: str):
+async def set_session_title(session_id: str, username: str, title: str):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
-            "UPDATE sessions SET title = ? WHERE id = ?",
-            (title, session_id),
+            "UPDATE sessions SET title = ? WHERE id = ? AND username = ?",
+            (title, session_id, username),
         )
         await db.commit()
 

@@ -58,9 +58,22 @@ async def test_message_count():
 
 async def test_set_and_get_session_title():
     s = await db.create_session("alex", "moc")
-    await db.set_session_title(s["id"], "My Test Chat")
+    await db.set_session_title(s["id"], "alex", "My Test Chat")
     sessions = await db.list_sessions("alex")
     assert sessions[0]["title"] == "My Test Chat"
+
+
+async def test_get_session_returns_correct_row():
+    s = await db.create_session("alex", "serious")
+    row = await db.get_session(s["id"], "alex")
+    assert row is not None
+    assert row["id"] == s["id"]
+    assert row["mode"] == "serious"
+
+
+async def test_get_session_wrong_user_returns_none():
+    s = await db.create_session("alex", "moc")
+    assert await db.get_session(s["id"], "jason") is None
 
 
 async def test_get_context_default_empty():
