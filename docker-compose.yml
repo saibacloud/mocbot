@@ -1,0 +1,33 @@
+services:
+  mocbot:
+    build:
+      context: .
+      args:
+        ALEX_TOKEN: ${ALEX_TOKEN:-}
+        JASON_TOKEN: ${JASON_TOKEN:-}
+        OLLAMA_HOST: ${OLLAMA_HOST:-http://192.168.1.243:11434}
+        MOC_MODEL: ${MOC_MODEL:-llama3.1:8b}
+        SERIOUS_MODEL: ${SERIOUS_MODEL:-gemma4:e4b}
+    image: mocbot:latest
+    container_name: mocbot
+    restart: unless-stopped
+    ports:
+      - "8100:8000"
+    environment:
+      ALEX_TOKEN:
+      JASON_TOKEN:
+      OLLAMA_HOST:
+      MOC_MODEL:
+      SERIOUS_MODEL:
+      MOCHA_DB: /data/mocha.db
+    volumes:
+      - mocbot-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status == 200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mocbot-data:
