@@ -21,32 +21,32 @@
 </div>
 
 <div id="app-screen">
-  <div id="sidebar">
-    <button id="mocmode-toggle" class="active">MocMode</button>
+  <aside id="sidebar">
     <button id="new-chat-btn">+ new chat</button>
     <div id="session-list"></div>
     <div id="sidebar-footer">
       <span id="username-label"></span>
       <button id="context-btn">context</button>
     </div>
-  </div>
+  </aside>
 
-  <div id="main">
+  <main id="main">
     <div id="chat-main"></div>
     <form id="chat-form">
-      <input id="chat-input" type="text" placeholder="say something..." autocomplete="off">
-      <button type="submit">send</button>
+      <input id="chat-input" type="text" placeholder="message mocha..." autocomplete="off">
+      <button id="send-btn" type="submit">send</button>
+      <select id="model-select" aria-label="model"></select>
     </form>
-  </div>
+  </main>
 </div>
 
 <div id="context-overlay">
   <div id="context-editor">
     <div id="context-header">
-      <span>your context — injected in SeriousMochaMode only</span>
+      <span>your context — injected only when chatting with non-Mocha models</span>
       <button id="context-close">×</button>
     </div>
-    <textarea id="context-textarea" placeholder="Describe your role, current projects, preferred response style..."></textarea>
+    <textarea id="context-textarea" placeholder="describe your role, current projects, preferred response style..."></textarea>
     <button id="context-save">save</button>
   </div>
 </div>

@@ -4,7 +4,7 @@ import * as chat from './chat.js';
 
 let _username = null;
 let _activeSessionId = null;
-let _mocMode = true;
+let _models = [];
 let _sending = false;
 
 async function _boot() {
@@ -13,7 +13,7 @@ async function _boot() {
     const user = await api.verifyToken(token).catch(() => null);
     if (user) {
       _username = user;
-      _showApp();
+      await _showApp();
       return;
     }
   }
@@ -30,14 +30,37 @@ async function _showApp() {
   document.getElementById('app-screen').classList.add('visible');
   document.getElementById('username-label').textContent = _username;
 
+  _models = await api.getModels();
+  _populateModelSelect();
+
   sessions.init({ onSelect: _loadSession, onDelete: _deleteSession });
   await sessions.load();
   chat.showEmpty();
 }
 
+function _populateModelSelect() {
+  const sel = document.getElementById('model-select');
+  sel.innerHTML = '';
+  for (const m of _models) {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.label;
+    sel.appendChild(opt);
+  }
+}
+
+function _setSelectedModel(model) {
+  if (!model) return;
+  const sel = document.getElementById('model-select');
+  if ([...sel.options].some(o => o.value === model)) sel.value = model;
+}
+
 async function _loadSession(id) {
   _activeSessionId = id;
   sessions.setActive(id);
+  const session = sessions.get(id);
+  if (session) _setSelectedModel(session.model);
+  document.getElementById('model-select').disabled = true;
   const messages = await api.getMessages(id);
   chat.renderMessages(messages);
 }
@@ -45,23 +68,29 @@ async function _loadSession(id) {
 async function _deleteSession(id) {
   await api.deleteSession(id);
   sessions.remove(id);
-  if (_activeSessionId === id) {
-    _activeSessionId = null;
-    chat.showEmpty();
-  }
+  if (_activeSessionId === id) _resetToNew();
 }
 
-async function _newChat() {
-  const mode = _mocMode ? 'moc' : 'serious';
-  const session = await api.createSession(mode);
-  const full = { ...session, title: null, updated_at: session.created_at, mode };
+function _resetToNew() {
+  _activeSessionId = null;
+  sessions.setActive(null);
+  document.getElementById('model-select').disabled = false;
+  chat.showEmpty();
+}
+
+async function _newChat(model) {
+  const session = await api.createSession(model);
+  const full = { ...session, title: null, updated_at: session.created_at, model };
   sessions.prepend(full);
   await _loadSession(session.id);
 }
 
 async function _send(text) {
   if (_sending || !text.trim()) return;
-  if (!_activeSessionId) await _newChat();
+  if (!_activeSessionId) {
+    const model = document.getElementById('model-select').value;
+    await _newChat(model);
+  }
 
   _sending = true;
   const input = document.getElementById('chat-input');
@@ -90,18 +119,13 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   if (user) {
     api.setToken(token);
     _username = user;
-    _showApp();
+    await _showApp();
   } else {
     document.getElementById('login-error').textContent = 'invalid token.';
   }
 });
 
-document.getElementById('mocmode-toggle').addEventListener('click', () => {
-  _mocMode = !_mocMode;
-  document.getElementById('mocmode-toggle').classList.toggle('active', _mocMode);
-});
-
-document.getElementById('new-chat-btn').addEventListener('click', _newChat);
+document.getElementById('new-chat-btn').addEventListener('click', _resetToNew);
 
 document.getElementById('chat-form').addEventListener('submit', async e => {
   e.preventDefault();

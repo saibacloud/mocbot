@@ -33,16 +33,19 @@ Rules you never break:
 
 You complain. You judge. You are unimpressed by everything. You are Mocha."""
 
-OLLAMA_CONFIG = {
-    "moc": {
-        "model": os.getenv("MOC_MODEL", "llama3.1:8b"),
+MODELS = {
+    "llama3.1:8b": {
+        "label": "Mocha",
         "options": {"temperature": 0.85, "top_p": 0.9, "repeat_penalty": 1.1},
+        "persona": MOCHA_SYSTEM_PROMPT,
     },
-    "serious": {
-        "model": os.getenv("SERIOUS_MODEL", "gemma4:e4b"),
+    "gemma4:e4b": {
+        "label": "Gemma",
         "options": {"temperature": 0.7, "top_p": 0.9, "repeat_penalty": 1.05},
+        "persona": None,
     },
 }
+DEFAULT_MODEL = "llama3.1:8b"
 
 
 @asynccontextmanager
@@ -87,6 +90,11 @@ async def health():
         return {"status": "error", "detail": str(e)}
 
 
+@app.get("/models")
+async def list_models(_: str = Depends(resolve_user)):
+    return [{"id": k, "label": v["label"]} for k, v in MODELS.items()]
+
+
 @app.get("/sessions")
 async def list_sessions(username: str = Depends(resolve_user)):
     return await db.list_sessions(username)
@@ -95,10 +103,10 @@ async def list_sessions(username: str = Depends(resolve_user)):
 @app.post("/sessions", status_code=201)
 async def create_session(request: Request, username: str = Depends(resolve_user)):
     body = await request.json()
-    mode = body.get("mode", "moc")
-    if mode not in ("moc", "serious"):
-        raise HTTPException(status_code=400, detail="mode must be 'moc' or 'serious'")
-    return await db.create_session(username, mode)
+    model = body.get("model", DEFAULT_MODEL)
+    if model not in MODELS:
+        raise HTTPException(status_code=400, detail=f"unknown model: {model}")
+    return await db.create_session(username, model)
 
 
 @app.delete("/sessions/{session_id}", status_code=204)
@@ -126,9 +134,9 @@ async def set_context(request: Request, username: str = Depends(resolve_user)):
     return {"ok": True}
 
 
-async def _generate_title(user_msg: str, assistant_msg: str, config: dict) -> str:
+async def _generate_title(user_msg: str, assistant_msg: str, model: str) -> str:
     payload = {
-        "model": config["model"],
+        "model": model,
         "messages": [
             {"role": "user", "content": f"User: {user_msg}\nAssistant: {assistant_msg}"},
             {"role": "user", "content": "Summarise this conversation as a chat title in 4-5 words. Reply with only the title, no punctuation."},
@@ -155,16 +163,19 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
     if not user_message:
         raise HTTPException(status_code=400, detail="message is required")
 
-    mode = session["mode"]
-    config = OLLAMA_CONFIG[mode]
+    model = session["model"]
+    config = MODELS.get(model)
+    if not config:
+        raise HTTPException(status_code=500, detail=f"session uses unknown model: {model}")
+
     history = await db.get_messages(session_id)
     is_first = len(history) == 0
 
     await db.add_message(session_id, "user", user_message)
 
     ollama_messages = []
-    if mode == "moc":
-        ollama_messages.append({"role": "system", "content": MOCHA_SYSTEM_PROMPT})
+    if config["persona"]:
+        ollama_messages.append({"role": "system", "content": config["persona"]})
     else:
         context = await db.get_context(username)
         if context:
@@ -175,7 +186,7 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
     ollama_messages.append({"role": "user", "content": user_message})
 
     payload = {
-        "model": config["model"],
+        "model": model,
         "messages": ollama_messages,
         "stream": True,
         "options": config["options"],
@@ -201,7 +212,7 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
         await db.add_message(session_id, "assistant", full_reply)
 
         if is_first and full_reply:
-            title = await _generate_title(user_message, full_reply, config)
+            title = await _generate_title(user_message, full_reply, model)
             if title:
                 await db.set_session_title(session_id, username, title)
                 yield f"data: {json.dumps({'title': title})}\n\n"

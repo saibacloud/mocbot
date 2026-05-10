@@ -20,6 +20,10 @@ export function setActive(id) {
   _render();
 }
 
+export function get(id) {
+  return _sessions.find(s => s.id === id);
+}
+
 export function updateTitle(sessionId, title) {
   const s = _sessions.find(s => s.id === sessionId);
   if (s) { s.title = title; _render(); }
@@ -43,6 +47,11 @@ function _relativeTime(iso) {
   return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
 }
 
+function _modelLabel(model) {
+  if (!model) return '';
+  return model.split(':')[0];
+}
+
 function _render() {
   const list = document.getElementById('session-list');
   list.innerHTML = '';
@@ -51,14 +60,13 @@ function _render() {
     const el = document.createElement('div');
     el.className = 'session-item' + (s.id === _activeId ? ' active' : '');
 
-    const pip = s.mode === 'moc' ? '（ﾟ､ ｡７' : '·';
     const title = s.title || 'new chat';
 
     el.innerHTML = `
       <div class="session-title">${_esc(title)}</div>
       <div class="session-meta">
         <span class="session-date">${_relativeTime(s.updated_at)}</span>
-        <span class="session-pip ${s.mode}">${pip}</span>
+        <span class="session-model">${_esc(_modelLabel(s.model))}</span>
       </div>
       <button class="session-delete" data-id="${s.id}" title="Delete">×</button>
     `;

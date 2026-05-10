@@ -52,20 +52,31 @@ async def test_health(client):
     assert r.status_code == 200
     assert "status" in r.json()
 
-async def test_create_session_moc(alex):
-    r = await alex.post("/sessions", json={"mode": "moc"})
+async def test_list_models(alex):
+    r = await alex.get("/models")
+    assert r.status_code == 200
+    ids = {m["id"] for m in r.json()}
+    assert "llama3.1:8b" in ids
+    assert "gemma4:e4b" in ids
+
+async def test_models_requires_auth(client):
+    r = await client.get("/models")
+    assert r.status_code == 401
+
+async def test_create_session_default_model(alex):
+    r = await alex.post("/sessions", json={})
     assert r.status_code == 201
     data = r.json()
-    assert data["mode"] == "moc"
+    assert data["model"] == "llama3.1:8b"
     assert "id" in data
 
-async def test_create_session_serious(alex):
-    r = await alex.post("/sessions", json={"mode": "serious"})
+async def test_create_session_explicit_model(alex):
+    r = await alex.post("/sessions", json={"model": "gemma4:e4b"})
     assert r.status_code == 201
-    assert r.json()["mode"] == "serious"
+    assert r.json()["model"] == "gemma4:e4b"
 
-async def test_create_session_invalid_mode(alex):
-    r = await alex.post("/sessions", json={"mode": "banana"})
+async def test_create_session_invalid_model(alex):
+    r = await alex.post("/sessions", json={"model": "banana:1b"})
     assert r.status_code == 400
 
 async def test_list_sessions_empty(alex):
@@ -74,29 +85,29 @@ async def test_list_sessions_empty(alex):
     assert r.json() == []
 
 async def test_list_sessions_returns_user_sessions_only(alex, jason):
-    await alex.post("/sessions", json={"mode": "moc"})
+    await alex.post("/sessions", json={"model": "llama3.1:8b"})
     r = await jason.get("/sessions")
     assert r.json() == []
 
 async def test_delete_session(alex):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await alex.delete(f"/sessions/{sid}")
     assert r.status_code == 204
     assert (await alex.get("/sessions")).json() == []
 
 async def test_delete_session_wrong_user(alex, jason):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await jason.delete(f"/sessions/{sid}")
     assert r.status_code == 404
 
 async def test_get_messages_empty(alex):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await alex.get(f"/sessions/{sid}/messages")
     assert r.status_code == 200
     assert r.json() == []
 
 async def test_get_messages_wrong_user(alex, jason):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await jason.get(f"/sessions/{sid}/messages")
     assert r.status_code == 404
 
@@ -141,7 +152,7 @@ def make_ollama_title_response(title: str):
 
 
 async def test_chat_streams_response(alex):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
 
     stream_mock = make_ollama_stream(["hello", " there"])
     title_mock = make_ollama_title_response("Hello There Chat")
@@ -162,7 +173,7 @@ async def test_chat_streams_response(alex):
 
 
 async def test_chat_saves_messages(alex):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
 
     stream_mock = make_ollama_stream(["meow"])
     title_mock = make_ollama_title_response("Meow Chat")
@@ -185,12 +196,12 @@ async def test_chat_saves_messages(alex):
 
 
 async def test_chat_wrong_session_returns_404(alex, jason):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await jason.post(f"/sessions/{sid}/chat", json={"message": "hi"})
     assert r.status_code == 404
 
 
 async def test_chat_empty_message_returns_400(alex):
-    sid = (await alex.post("/sessions", json={"mode": "moc"})).json()["id"]
+    sid = (await alex.post("/sessions", json={"model": "llama3.1:8b"})).json()["id"]
     r = await alex.post(f"/sessions/{sid}/chat", json={"message": "   "})
     assert r.status_code == 400

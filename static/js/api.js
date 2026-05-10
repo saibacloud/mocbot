@@ -28,17 +28,23 @@ export async function verifyToken(token) {
   return (await r.json()).username;
 }
 
+export async function getModels() {
+  const r = await fetch('/models', { headers: authHeaders() });
+  if (!r.ok) throw new Error('Failed to load models');
+  return r.json();
+}
+
 export async function getSessions() {
   const r = await fetch('/sessions', { headers: authHeaders() });
   if (!r.ok) throw new Error('Failed to load sessions');
   return r.json();
 }
 
-export async function createSession(mode) {
+export async function createSession(model) {
   const r = await fetch('/sessions', {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ mode }),
+    body: JSON.stringify({ model }),
   });
   if (!r.ok) throw new Error('Failed to create session');
   return r.json();

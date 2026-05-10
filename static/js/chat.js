@@ -1,23 +1,19 @@
-const CAT_ASCII = `   ／l、\n （ﾟ､ ｡７\n  |、ﾞ~ヽ\n  じしf_,)ノ `;
-
-let _breatheInterval = null;
-
 export function showEmpty() {
-  _stopBreathe();
   const main = document.getElementById('chat-main');
   main.innerHTML = '';
-  const pre = document.createElement('pre');
-  pre.id = 'cat';
-  pre.className = 'cat-empty';
-  pre.textContent = CAT_ASCII;
-  main.appendChild(pre);
-  _startBreathe(pre);
+  const div = document.createElement('div');
+  div.className = 'chat-empty';
+  div.textContent = 'start a new chat below';
+  main.appendChild(div);
 }
 
 export function renderMessages(messages) {
-  _stopBreathe();
   const main = document.getElementById('chat-main');
   main.innerHTML = '';
+  if (messages.length === 0) {
+    showEmpty();
+    return;
+  }
   for (const msg of messages) {
     _appendEl(msg.role, msg.content);
   }
@@ -25,13 +21,13 @@ export function renderMessages(messages) {
 }
 
 export function appendUserMessage(text) {
-  _stopBreathe();
+  _clearEmpty();
   _appendEl('user', text);
   _scrollBottom();
 }
 
 export function appendStreamingPlaceholder() {
-  _stopBreathe();
+  _clearEmpty();
   const el = _appendEl('assistant', '...');
   let accumulated = '';
 
@@ -47,31 +43,24 @@ export function appendStreamingPlaceholder() {
   };
 }
 
+function _clearEmpty() {
+  const empty = document.querySelector('.chat-empty');
+  if (empty) empty.remove();
+}
+
 function _appendEl(role, content) {
   const main = document.getElementById('chat-main');
-  const el = document.createElement('div');
-  el.className = role === 'user' ? 'msg-you' : 'msg-mocha';
-  el.textContent = content;
-  main.appendChild(el);
-  return el;
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = `msg-bubble ${role}`;
+  bubble.textContent = content;
+  row.appendChild(bubble);
+  main.appendChild(row);
+  return bubble;
 }
 
 function _scrollBottom() {
   const main = document.getElementById('chat-main');
   main.scrollTop = main.scrollHeight;
-}
-
-function _startBreathe(el) {
-  let up = false;
-  _breatheInterval = setInterval(() => {
-    up = !up;
-    el.style.transform = up ? 'translateY(-5px)' : 'translateY(0)';
-  }, 1500);
-}
-
-function _stopBreathe() {
-  if (_breatheInterval) {
-    clearInterval(_breatheInterval);
-    _breatheInterval = null;
-  }
 }

@@ -5,9 +5,9 @@
 }
 
 body {
-  background: #111;
-  color: #ccc;
-  font-family: 'Courier New', Courier, monospace;
+  background: #0d0d0d;
+  color: #e6e6e6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   height: 100vh;
   overflow: hidden;
 }
@@ -24,7 +24,8 @@ body {
 }
 
 #login-screen .cat-art {
-  color: #c8853a;
+  color: #e6e6e6;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 16px;
   line-height: 1.5;
   animation: breathe 3s ease-in-out infinite;
@@ -37,7 +38,7 @@ body {
 }
 
 #login-error {
-  color: #c8853a;
+  color: #888;
   font-size: 12px;
   min-height: 16px;
 }
@@ -58,12 +59,18 @@ body {
 #sidebar {
   width: 260px;
   flex-shrink: 0;
-  border-right: 1px solid #1e1e1e;
+  background: #141414;
+  border-right: 1px solid #262626;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 12px;
-  gap: 8px;
+  padding: 16px 12px;
+  gap: 12px;
+}
+
+#new-chat-btn {
+  width: 100%;
+  text-align: center;
 }
 
 #session-list {
@@ -76,58 +83,45 @@ body {
 }
 
 #sidebar-footer {
-  border-top: 1px solid #1e1e1e;
-  padding-top: 10px;
+  border-top: 1px solid #262626;
+  padding-top: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #444;
+  color: #888;
 }
 
 #username-label {
-  color: #555;
+  color: #aaa;
 }
 
-#mocmode-toggle {
-  width: 100%;
-  text-align: center;
-  color: #555;
-  border-color: #2a2a2a;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-#mocmode-toggle.active {
-  color: #c8853a;
-  border-color: #c8853a;
-}
-
-#new-chat-btn {
-  width: 100%;
-  text-align: center;
-  color: #666;
-  border-color: #2a2a2a;
+#context-btn {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 /* ─── Session list items ─── */
 
 .session-item {
-  padding: 8px 10px;
-  border: 1px solid transparent;
+  padding: 10px 12px;
+  border-radius: 6px;
   cursor: pointer;
   position: relative;
-  border-radius: 2px;
+  transition: background 0.15s;
 }
 
-.session-item:hover,
+.session-item:hover {
+  background: #1c1c1c;
+}
+
 .session-item.active {
-  background: #161616;
-  border-color: #2a2a2a;
+  background: #242424;
 }
 
 .session-title {
   font-size: 13px;
-  color: #bbb;
+  color: #e6e6e6;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -139,29 +133,27 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
-  color: #444;
-  margin-top: 3px;
+  color: #777;
+  margin-top: 4px;
 }
 
-.session-pip.moc {
-  color: #c8853a;
+.session-model {
+  color: #999;
   font-size: 10px;
-}
-
-.session-pip.serious {
-  color: #3a3a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .session-delete {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   background: none;
   border: none;
-  color: #333;
-  font-size: 15px;
+  color: #555;
+  font-size: 16px;
   cursor: pointer;
-  padding: 0 3px;
+  padding: 0 4px;
   display: none;
   line-height: 1;
 }
@@ -171,8 +163,7 @@ body {
 }
 
 .session-delete:hover {
-  color: #888;
-  border-color: transparent;
+  color: #fff;
 }
 
 /* ─── Main area ─── */
@@ -188,54 +179,85 @@ body {
 #chat-main {
   flex: 1;
   overflow-y: auto;
-  padding: 48px 60px;
+  padding: 32px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-.cat-empty {
+.chat-empty {
   margin: auto;
-  color: #c8853a;
-  font-size: 16px;
-  line-height: 1.5;
-  transition: transform 0.6s ease-in-out;
-  display: inline-block;
-  align-self: center;
-}
-
-.msg-you {
+  color: #555;
   font-size: 14px;
-  color: #666;
-  line-height: 1.6;
+  text-align: center;
 }
 
-.msg-you::before {
-  content: 'you: ';
-  color: #444;
+/* ─── Messages ─── */
+
+.msg-row {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
 }
 
-.msg-mocha {
-  font-size: 14px;
-  color: #ccc;
-  line-height: 1.6;
+.msg-row.user {
+  justify-content: flex-end;
 }
 
-.msg-mocha::before {
-  content: 'mocha: ';
-  color: #c8853a;
+.msg-bubble {
+  line-height: 1.65;
+  font-size: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
+
+.msg-bubble.user {
+  background: #1f1f1f;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 16px;
+  max-width: 75%;
+}
+
+.msg-bubble.assistant {
+  color: #e6e6e6;
+  width: 100%;
+}
+
+/* ─── Input area ─── */
 
 #chat-form {
   display: flex;
   gap: 8px;
-  padding: 16px 60px;
+  padding: 14px 24px 18px;
   border-top: 1px solid #1a1a1a;
   flex-shrink: 0;
+  align-items: center;
+  max-width: 808px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 #chat-input {
   flex: 1;
+}
+
+#model-select {
+  font-size: 13px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #e6e6e6;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+#model-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ─── Context overlay ─── */
@@ -255,8 +277,9 @@ body {
 }
 
 #context-editor {
-  background: #111;
-  border: 1px solid #333;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
   width: 620px;
   max-width: 90vw;
   display: flex;
@@ -270,52 +293,55 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #444;
+  color: #888;
 }
 
 #context-close {
   background: none;
   border: none;
-  color: #555;
+  color: #888;
   font-size: 18px;
   padding: 0 4px;
   line-height: 1;
 }
 
 #context-close:hover {
-  color: #ccc;
-  border-color: transparent;
+  color: #fff;
+  background: none;
 }
 
 #context-textarea {
   background: #0d0d0d;
   border: 1px solid #2a2a2a;
-  color: #ccc;
-  font-family: 'Courier New', Courier, monospace;
+  color: #e6e6e6;
+  font-family: inherit;
   font-size: 13px;
   padding: 14px;
   resize: vertical;
   min-height: 220px;
   outline: none;
   line-height: 1.6;
+  border-radius: 6px;
 }
 
 #context-textarea:focus {
-  border-color: #555;
+  border-color: #777;
 }
 
 /* ─── Shared input/button ─── */
 
 input,
-button {
+button,
+select {
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
-  color: #ccc;
-  font-family: 'Courier New', Courier, monospace;
+  color: #e6e6e6;
+  font-family: inherit;
   font-size: 14px;
   padding: 10px 14px;
   outline: none;
   cursor: pointer;
+  border-radius: 8px;
 }
 
 input {
@@ -324,11 +350,24 @@ input {
 
 input:focus,
 input:hover {
-  border-color: #555;
+  border-color: #777;
 }
 
 button:hover {
+  background: #242424;
   border-color: #555;
+}
+
+#send-btn {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  font-weight: 500;
+}
+
+#send-btn:hover {
+  background: #ddd;
+  border-color: #ddd;
 }
 
 /* ─── Animation ─── */
