@@ -192,6 +192,55 @@ body {
   text-align: center;
 }
 
+.cat-watermark {
+  font-family: 'Courier New', Courier, monospace;
+  color: #2a2a2a;
+  font-size: 18px;
+  line-height: 1.5;
+  animation: breathe 4s ease-in-out infinite;
+  user-select: none;
+  pointer-events: none;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  height: 1em;
+  padding: 4px 0;
+}
+
+.thinking-dots span {
+  width: 7px;
+  height: 7px;
+  background: #888;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: scale(0.85); }
+  30% { opacity: 1; transform: scale(1); }
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.05em;
+  background: #999;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 1s steps(2) infinite;
+}
+
+@keyframes blink-cursor {
+  to { opacity: 0; }
+}
+
 /* ─── Messages ─── */
 
 .msg-row {
