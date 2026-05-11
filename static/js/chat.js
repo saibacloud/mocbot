@@ -1,4 +1,4 @@
-const CAT_ASCII = `　／l、\n（ﾟ､ ｡７\n　|、ﾞ~ヽ\n　じしf_,)ノ`;
+const CAT_ASCII = ` ／l、\n（ﾟ､ ｡７\n |、ﾞ~ヽ\n  じしf_,)ノ`;
 
 export function showEmpty() {
   const main = document.getElementById('chat-main');
