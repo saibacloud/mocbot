@@ -38,11 +38,13 @@ MODELS = {
         "label": "Mocha",
         "options": {"temperature": 0.85, "top_p": 0.9, "repeat_penalty": 1.1},
         "persona": MOCHA_SYSTEM_PROMPT,
+        "think": False,
     },
     "gemma4:e4b": {
-        "label": "Gemma",
+        "label": "gemma4:e4b",
         "options": {"temperature": 0.7, "top_p": 0.9, "repeat_penalty": 1.05},
         "persona": None,
+        "think": True,
     },
 }
 DEFAULT_MODEL = "llama3.1:8b"
@@ -191,6 +193,8 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
         "stream": True,
         "options": config["options"],
     }
+    if config["think"]:
+        payload["think"] = True
 
     async def stream_response():
         full_reply = ""
@@ -201,7 +205,10 @@ async def chat(session_id: str, request: Request, username: str = Depends(resolv
                         continue
                     try:
                         data = json.loads(line)
-                        if chunk := data.get("message", {}).get("content"):
+                        msg = data.get("message", {})
+                        if thinking := msg.get("thinking"):
+                            yield f"data: {json.dumps({'thinking_chunk': thinking})}\n\n"
+                        if chunk := msg.get("content"):
                             full_reply += chunk
                             yield f"data: {json.dumps({'chunk': chunk})}\n\n"
                         if data.get("done"):

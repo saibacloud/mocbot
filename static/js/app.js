@@ -34,6 +34,7 @@ async function _showApp() {
   _populateModelSelect();
 
   sessions.init({ onSelect: _loadSession, onDelete: _deleteSession });
+  sessions.setModels(_models);
   await sessions.load();
   chat.showEmpty();
 }
@@ -101,6 +102,7 @@ async function _send(text) {
 
   try {
     await api.streamChat(_activeSessionId, text, {
+      onThinking(chunk) { stream.updateThinking(chunk); },
       onChunk(chunk) { stream.update(chunk); },
       onDone() { stream.finalize(); },
       onTitle(title) { sessions.updateTitle(_activeSessionId, title); },

@@ -76,7 +76,7 @@ export async function saveContext(context) {
   if (!r.ok) throw new Error('Failed to save context');
 }
 
-export async function streamChat(sessionId, message, { onChunk, onDone, onTitle }) {
+export async function streamChat(sessionId, message, { onChunk, onThinking, onDone, onTitle }) {
   const response = await fetch(`/sessions/${sessionId}/chat`, {
     method: 'POST',
     headers: authHeaders(),
@@ -99,6 +99,7 @@ export async function streamChat(sessionId, message, { onChunk, onDone, onTitle 
       if (!line.startsWith('data: ')) continue;
       try {
         const data = JSON.parse(line.slice(6));
+        if (data.thinking_chunk !== undefined) onThinking?.(data.thinking_chunk);
         if (data.chunk !== undefined) onChunk(data.chunk);
         if (data.done) onDone();
         if (data.title) onTitle(data.title);

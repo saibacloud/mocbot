@@ -4,10 +4,16 @@ let _sessions = [];
 let _activeId = null;
 let _onSelect = null;
 let _onDelete = null;
+let _modelLabels = {};
 
 export function init({ onSelect, onDelete }) {
   _onSelect = onSelect;
   _onDelete = onDelete;
+}
+
+export function setModels(models) {
+  _modelLabels = Object.fromEntries(models.map(m => [m.id, m.label]));
+  _render();
 }
 
 export async function load() {
@@ -49,7 +55,7 @@ function _relativeTime(iso) {
 
 function _modelLabel(model) {
   if (!model) return '';
-  return model.split(':')[0];
+  return _modelLabels[model] || model;
 }
 
 function _render() {
