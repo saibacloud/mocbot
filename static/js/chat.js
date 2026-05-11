@@ -3,10 +3,13 @@ const CAT_ASCII = ` ／l、\n（ﾟ､ ｡７\n |、ﾞ~ヽ\n  じしf_,)ノ`;
 export function showEmpty() {
   const main = document.getElementById('chat-main');
   main.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-empty';
   const pre = document.createElement('pre');
-  pre.className = 'chat-empty cat-watermark';
+  pre.className = 'cat-watermark';
   pre.textContent = CAT_ASCII;
-  main.appendChild(pre);
+  wrap.appendChild(pre);
+  main.appendChild(wrap);
 }
 
 export function renderMessages(messages) {
