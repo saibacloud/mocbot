@@ -21,8 +21,12 @@ async function _boot() {
 }
 
 function _showLogin() {
-  document.getElementById('login-screen').style.display = 'flex';
+  const screen = document.getElementById('login-screen');
+  screen.style.display = 'flex';
   document.getElementById('app-screen').classList.remove('visible');
+
+  const slot = document.getElementById('login-cat');
+  if (slot && !slot.firstChild) slot.appendChild(chat.buildMochaCat());
 }
 
 async function _showApp() {

@@ -37,13 +37,8 @@ body {
   gap: 24px;
 }
 
-#login-screen .cat-art {
+#login-cat .cat-container {
   color: var(--text);
-  font-family: var(--mono);
-  font-size: 16px;
-  line-height: 1.5;
-  animation: breathe 3s ease-in-out infinite;
-  display: inline-block;
 }
 
 #login-form {
@@ -208,17 +203,33 @@ body {
   text-align: center;
 }
 
-.cat-watermark {
+.cat-container {
+  position: relative;
   display: inline-block;
-  text-align: left;
-  margin: 0;
   font-family: var(--mono);
   color: var(--line-soft);
-  font-size: 18px;
-  line-height: 1.5;
-  animation: breathe 4s ease-in-out infinite;
   user-select: none;
   pointer-events: none;
+}
+
+.cat-watermark {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  line-height: 1.6;
+  font-size: 18px;
+  text-align: left;
+}
+
+.cat-tail {
+  position: absolute;
+  bottom: 2px;
+  right: -28px;
+  width: 52px;
+  height: 72px;
+  overflow: visible;
+  opacity: 0.85;
 }
 
 /* ─── Messages ─── */
@@ -502,9 +513,3 @@ button:hover {
   border-color: #000;
 }
 
-/* ─── Animation ─── */
-
-@keyframes breathe {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}

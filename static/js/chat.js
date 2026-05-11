@@ -1,15 +1,55 @@
-const CAT_ASCII = ` ／l、\n（ﾟ､ ｡７\n |、ﾞ~ヽ\n  じしf_,)ノ`;
+const CAT_ASCII = ` ／l、\n（ﾟ､ ｡７\n |、ﾞ~ヽ\n  じしf_,)`;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+export function buildMochaCat() {
+  const container = document.createElement('div');
+  container.className = 'cat-container';
+
+  const pre = document.createElement('pre');
+  pre.className = 'cat-watermark';
+  pre.textContent = CAT_ASCII;
+  container.appendChild(pre);
+
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'cat-tail');
+  svg.setAttribute('viewBox', '-30 0 80 80');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M 0 64 Q 10 32 5 0');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '2.2');
+  path.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(path);
+  container.appendChild(svg);
+
+  _animateTail(path);
+  return container;
+}
 
 export function showEmpty() {
   const main = document.getElementById('chat-main');
   main.innerHTML = '';
+
   const wrap = document.createElement('div');
   wrap.className = 'chat-empty';
-  const pre = document.createElement('pre');
-  pre.className = 'cat-watermark';
-  pre.textContent = CAT_ASCII;
-  wrap.appendChild(pre);
+  wrap.appendChild(buildMochaCat());
   main.appendChild(wrap);
+}
+
+function _animateTail(path) {
+  let start = null;
+  function step(ts) {
+    if (!path.isConnected) return;
+    if (start === null) start = ts;
+    const t = (ts - start) / 1000;
+    const swing = Math.sin(t * 1.1) * 11 + Math.sin(t * 2.3) * 4;
+    const cp1x = 0 + swing * 1.2;
+    const cp2x = 18 - swing * 1.4;
+    const ex = 8 + swing * 0.2;
+    path.setAttribute('d', `M 0 64 C ${cp1x} 52 ${cp2x} 16 ${ex} 0`);
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 export function renderMessages(messages) {
