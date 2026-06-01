@@ -26,11 +26,33 @@
       gap: 20px;
     }
 
-    pre {
+    .cat-wrap {
+      position: relative;
+      height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    .cat {
+      position: absolute;
       color: #c8853a;
       font-size: 16px;
       line-height: 1.5;
       text-align: left;
+      transition: opacity 0.5s, transform 0.5s;
+    }
+
+    .cat.hidden {
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+    }
+
+    .cat.visible {
+      opacity: 1;
+      transform: scale(1);
     }
 
     #log {
@@ -112,40 +134,21 @@
         transform: translateY(-4px);
       }
     }
-
-    #cat {
-      animation: breathe 3s ease-in-out infinite;
-      display: inline-block;
-    }
   </style>
 </head>
 
-<pre id="cat">
-   ／l、
+<body>
+
+<div class="cat-wrap">
+  <pre class="cat visible" id="cat-sleep">  ／l、
+ （-ᴗ-７
+  |、ﾞ~ヽ
+  じしf_,)ノ </pre>
+  <pre class="cat hidden" id="cat-awake">  ／l、
  （ﾟ､ ｡７
   |、ﾞ~ヽ
-  じしf_,)ノ 
-</pre>
-
-<script>
-  const frames = [
-    `   ／l、
- （ﾟ､ ｡７
-  |、ﾞ~ヽ
-  じしf_,)ノ `,
-
-    `   ／l、
- （ﾟ､ ｡７
-  |、ﾞ~ヽ
-  じしf_,)ノ `,
-  ];
-
-  let i = 0;
-  setInterval(() => {
-    i = (i + 1) % frames.length;
-    document.getElementById('cat').textContent = frames[i];
-  }, 1800);
-</script>
+  じしf_,)ノ </pre>
+</div>
 
 <div id="log">
   <div class="msg-mocha">...you're looking at me.. what do you want..</div>
@@ -159,7 +162,14 @@
 <script>
   const log = document.getElementById('log');
   const input = document.getElementById('input');
+  const catSleep = document.getElementById('cat-sleep');
+  const catAwake = document.getElementById('cat-awake');
   let history = [];
+
+  function setAwake(awake) {
+    catSleep.className = 'cat ' + (awake ? 'hidden' : 'visible');
+    catAwake.className = 'cat ' + (awake ? 'visible' : 'hidden');
+  }
 
   async function send(e) {
     e.preventDefault();
@@ -204,7 +214,7 @@
           try {
             const data = JSON.parse(line.slice(6));
             if (data.chunk) {
-              if (!started) { mochaMsg.textContent = ''; started = true; }
+              if (!started) { mochaMsg.textContent = ''; started = true; setAwake(true); }
               reply += data.chunk;
               mochaMsg.textContent = reply;
               log.scrollTop = log.scrollHeight;
@@ -217,9 +227,10 @@
       }
     } catch {
       mochaMsg.textContent = '...something broke.';
+    } finally {
+      setAwake(false);
     }
   }
-
 </script>
 
 </body>
