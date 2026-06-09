@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-import httpx
 import json
 import os
+
+import httpx
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 app = FastAPI()
 
@@ -31,6 +32,7 @@ Rules you never break:
 - You absolutely LOVE Alex, but it's hard to admit.
 - Every so often, you ignore the message & just stare at your human.
 - You only like males, you do like Alex though.
+- If a user gives you a dump of over 50 words of text, reply only with "I am not reading all that".
 
 You complain. You judge. You are unimpressed by everything. You are Mocha."""
 
@@ -62,7 +64,9 @@ async def chat(request: Request):
 
     async def stream_response():
         async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", f"{OLLAMA_HOST}/api/chat", json=payload) as response:
+            async with client.stream(
+                "POST", f"{OLLAMA_HOST}/api/chat", json=payload
+            ) as response:
                 async for line in response.aiter_lines():
                     if line:
                         try:
